@@ -6,16 +6,18 @@ import re
 from typing import Union
 
 
-YEAR_PTRN = re.compile(r'\d{4}')
+CAPITALIZE_PTRN = re.compile(r'([.?!]) ([а-яё])')
 LINE_BREAK = 'BR'
-TOKEN_PTRN = re.compile(r'\w+')
+SPACE_PUNC_PTRN = re.compile(r' ([.,!?:;])')
+TOKEN_PTRN = re.compile(r'[\w-]+|\S+')
+YEAR_PTRN = re.compile(r'\d{4}')
 
 
 def tokenize(text: str) -> list[str]:
     return re.findall(TOKEN_PTRN, text)
 
 
-class FormNgrams:
+class PuncNgrams:
     def __init__(self, data_folder: Union[Path, str], randomness: float = 0.0):
         self.data_folder = data_folder
         self.randomness = randomness
@@ -30,7 +32,7 @@ class FormNgrams:
             next_word = self.next_word(' '.join(result[-2:]))
             result.append(next_word)
         text = ' '.join(result)
-        return re.sub(rf' ?{LINE_BREAK} ?', '\n', text)
+        return self._postprocess(text)
 
     @cache
     def _get_candidates(self, prompt):
@@ -67,3 +69,17 @@ class FormNgrams:
             return self._next_from_1grams()
         next_word = self._next_from_2_3_grams(prompt)
         return next_word or self._next_from_1grams()
+
+    def _postprocess(self, text: str) -> str:
+        text = re.sub(rf' ?{LINE_BREAK} ?', '\n', text)
+        text = re.sub(SPACE_PUNC_PTRN, r'\1', text)
+        while not text[0].isalpha():
+            text = text[1:]
+        text = text.capitalize()
+        symbols = []
+        text = f'**{text}'
+        for i, c in enumerate(text):
+            if c.islower() and text[i - 2] in {'.', '!', '?'}:
+                c = c.upper()
+            symbols.append(c)
+        return ''.join(symbols[2:])
