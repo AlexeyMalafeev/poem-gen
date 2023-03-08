@@ -13,13 +13,14 @@ def tokenize(text: str) -> list[str]:
 
 
 class NaiveNgrams:
-    def __init__(self, data_folder: Union[Path, str]):
+    def __init__(self, data_folder: Union[Path, str], randomness: float = 0.1):
         self.data_folder = data_folder
+        self.randomness = randomness
         self.ngrams1: Counter[str, int] = Counter()
         self.ngrams2: Counter[str, int] = Counter()
         self.ngrams3: Counter[str, int] = Counter()
 
-    def generate(self, prompt: str, max_len: int = 30, randomness: float = 0.0) -> str:
+    def generate(self, prompt: str, max_len: int = 30) -> str:
         result: list[str] = tokenize(prompt)
         for _ in range(max_len):
             next_word = self.next_word(' '.join(result[-2:]))
@@ -37,9 +38,8 @@ class NaiveNgrams:
         self.ngrams3 = Counter(' '.join(tokens[i:i + 3]) for i in range(len(tokens) - 2))
 
     def next_word(self, prompt: str) -> str:
-        # todo add frequency-based sampling
         prompt = prompt.strip()
-        if not prompt:
+        if not prompt or random.random() <= self.randomness:
             return random.choice(list(self.ngrams1))
         pool = []
         if ' ' in prompt:
