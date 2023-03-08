@@ -1,7 +1,7 @@
-from poem_gen.freq_ngrams import FreqNgrams
+from poem_gen.form_ngrams import FormNgrams
 
 
-ngrams = FreqNgrams('data', randomness=0.1)
+ngrams = FormNgrams('data', randomness=0.1)
 ngrams.load_txt('Mayakovsky.txt')
 
 print('prompt = ""')
